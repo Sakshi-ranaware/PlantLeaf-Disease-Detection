@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+{{title}}
+{% endblock pagetitle %}
+{% block body %}
+
+<style>
+    .falling-leaf {
+        position: fixed;
+        z-index: 999;
+        pointer-events: none;
+        animation: falling 10s linear infinite;
+    }
+
+    @keyframes falling {
+        0% {
+            transform: translateY(-10%) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    .farm-bg {
+        background: linear-gradient(135deg, #ffd89b 0%, #ffb366 100%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.3;
+        background-image: 
+            url('data:image/svg+xml;utf8,<svg width="50" height="50" xmlns="http://www.w3.org/2000/svg"><path d="M25 25l12.5-21.7h-25L25 25z" fill="%23D35400" opacity="0.1"/></svg>'),
+            url('data:image/svg+xml;utf8,<svg width="30" height="30" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="15" r="5" fill="%23E67E22" opacity="0.1"/></svg>');
+        animation: bgScroll 30s linear infinite;
+    }
+
+    @keyframes bgScroll {
+        from { background-position: 0 0, 0 0; }
+        to { background-position: 100px 100px, 50px 50px; }
+    }
+
+    .result-card {
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.95);
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #D35400;
+    }
+
+    .result-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: repeating-linear-gradient(
+            45deg,
+            #E67E22,
+            #E67E22 10px,
+            #D35400 10px,
+            #D35400 20px
+        );
+    }
+
+    .result-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(211, 84, 0, 0.15);
+    }
+
+    .confidence-bar {
+        height: 30px;
+        border-radius: 15px;
+        background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .confidence-indicator {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: #2c3e50;
+        transition: left 0.5s ease;
+    }
+
+    .urgency-high {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+
+    .urgency-medium {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+    }
+
+    .urgency-low {
+        background: linear-gradient(135deg, #27ae60, #229954);
+        color: white;
+    }
+
+    .prediction-item {
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        border-left: 4px solid #E67E22;
+    }
+
+    .enhanced-prevention {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 20px;
+        border: 2px solid #D35400;
+    }
+
+    .prevention-step {
+        margin: 10px 0;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        border-left: 4px solid #27ae60;
+        transition: all 0.3s ease;
+    }
+
+    .prevention-step:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .title-glow {
+        animation: titleGlow 2s ease-in-out infinite;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        font-family: 'Rajdhani', sans-serif;
+    }
+
+    @keyframes titleGlow {
+        0%, 100% { text-shadow: 0 0 5px rgba(211, 84, 0, 0.5); }
+        50% { text-shadow: 0 0 20px rgba(211, 84, 0, 0.8); }
+    }
+
+    .analysis-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        margin: 5px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .image-analysis {
+        position: relative;
+        display: inline-block;
+    }
+
+    .analysis-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        border: 2px solid #D35400;
+    }
+</style>
+
+<div class="farm-bg"></div>
+
+<script>
+    function createLeaf() {
+        const leaf = document.createElement('img');
+        leaf.src = '/static/images/leaf.png';
+        leaf.classList.add('falling-leaf');
+        leaf.style.left = Math.random() * 100 + 'vw';
+        leaf.style.width = Math.random() * 20 + 20 + 'px';
+        leaf.style.filter = 'hue-rotate(' + Math.random() * 90 + 'deg) sepia(50%)';
+        document.body.appendChild(leaf);
+        
+        setTimeout(() => {
+            leaf.remove();
+        }, 10000);
+    }
+
+    setInterval(createLeaf, 2000);
+</script>
+
+<div class="container">
+    <div class="row mb-5 text-center">
+        <div class="col-lg-10 mx-auto">
+            <h1 class="display-4 title-glow animate__animated animate__fadeIn" style="padding-top: 2%; font-weight: 400; color: #D35400;">
+                <b>🌿 Enhanced Disease Analysis 🌿</b>
+            </h1>
+            <p class="lead animate__animated animate__fadeIn animate__delay-1s" style="color: #E67E22;">
+                AI-Powered Plant Health Diagnosis with Real-Time Recommendations
+            </p>
+        </div>
+    </div>
+
+    <!-- Confidence and Urgency Analysis -->
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="result-card p-4 shadow rounded-lg animate__animated animate__fadeIn animate__delay-1s">
+                <h5 class="mb-3">🔍 Analysis Confidence & Urgency</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="confidence-bar mb-2">
+                            <div class="confidence-indicator" style="left: {{(confidence * 100) - 2}}%"></div>
+                        </div>
+                        <p><strong>Confidence: {{(confidence * 100)|round(1)}}%</strong></p>
+                        <p class="text-muted">{{analysis_confidence}}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="analysis-badge {% if confidence > 0.8 %}urgency-high{% elif confidence > 0.6 %}urgency-medium{% else %}urgency-low{% endif %}">
+                            {% if confidence > 0.8 %}🚨 {{urgency}}{% elif confidence > 0.6 %}⚠️ {{urgency}}{% else %}✅ {{urgency}}{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Display -->
+    <center>
+        <div class="col animate__animated animate__fadeIn animate__delay-1s">
+            <div class="result-card p-4 shadow rounded-lg image-analysis" style="width: 30%;">
+                <img src={{image_url}} width="350" height="350" class="rounded-lg">
+                <div class="analysis-overlay">
+                    {{(confidence * 100)|round(1)}}% Match
+                </div>
+            </div>
+        </div>
+    </center>
+    
+    <br>
+    
+    <!-- Disease Information -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="result-card p-5 shadow rounded-lg animate__animated animate__fadeIn animate__delay-2s">
+                <h5 class="text-success mb-4">
+                    <b class="animate__animated animate__pulse animate__infinite">
+                        🌱 Disease Analysis: {{title}}
+                    </b>
+                </h5>
+                <p style="line-height: 1.8; font-size: 1.1em; color: #333; text-align: justify; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 10px; border-left: 4px solid #E67E22;">
+                    {{desc}}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 3 Predictions -->
+    <div class="row mt-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="result-card p-5 shadow rounded-lg animate__animated animate__fadeIn animate__delay-3s">
+                <h5 class="mb-4">🎯 Top 3 Possible Conditions</h5>
+                {% for pred in top3_predictions %}
+                <div class="prediction-item">
+                    <strong>{{CNN.idx_to_classes[pred.class]}}</strong>
+                    <div class="progress mt-2">
+                        <div class="progress-bar" role="progressbar" style="width: {{(pred.probability * 100)|round(1)}}%; background: linear-gradient(90deg, #D35400, #E67E22);">
+                            {{(pred.probability * 100)|round(1)}}%
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Prevention Steps -->
+    <div class="row mt-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="enhanced-prevention shadow rounded-lg animate__animated animate__fadeIn animate__delay-4s">
+                <h5 class="mb-4">🛡️ Comprehensive Prevention & Treatment Plan</h5>
+                <div class="prevention-step">
+                    <div style="white-space: pre-line;"></div>{{prevent}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplement Recommendation -->
+    {% if pred!=4 %}
+    <div class="row mt-4">
+        <div class="col-lg-6 mx-auto">
+            <div class="result-card p-5 shadow rounded-lg animate__animated animate__fadeIn animate__delay-5s">
+                <center>
+                    <h5 class="mb-4">
+                        <span class="badge" style="background: linear-gradient(45deg, #D35400, #E67E22); padding: 10px 20px; border-radius: 25px;">
+                            🌿 Recommended Treatment
+                        </span>
+                    </h5>
+                    
+                    <div class="image-container position-relative" style="margin: 20px 0;">
+                        <img src={{simage}} class="rounded-lg shadow-lg" style="width: 300px; height: 350px; object-fit: cover; border: 3px solid #D35400;">
+                    </div>
+
+                    <h6 class="product-name" style="color: #D35400; font-size: 1.2em; font-weight: 600; margin: 15px 0;">
+                        {{sname}}
+                    </h6>
+
+                    <a target="_blank" href={{buy_link}} class="text-decoration-none">
+                        <button type="button" class="btn btn-success" style="background: linear-gradient(45deg, #D35400, #E67E22); border: none; padding: 12px 30px; border-radius: 50px; font-weight: 600;">
+                            🛒 Purchase Treatment
+                        </button>
+                    </a>
+                </center>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="row mt-4 mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <div class="result-card p-4 shadow rounded-lg animate__animated animate__fadeIn animate__delay-6s">
+                <h5>🔄 Next Steps</h5>
+                <div class="mt-3">
+                    <a href="/index" class="btn btn-primary mx-2" style="background: linear-gradient(45deg, #D35400, #E67E22); border: none;">
+                        📸 Analyze Another Image
+                    </a>
+                    <a href="/market" class="btn btn-success mx-2" style="background: linear-gradient(45deg, #27ae60, #229954); border: none;">
+                        🛍️ Browse Treatments
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}
